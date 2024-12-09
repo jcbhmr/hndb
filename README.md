@@ -12,6 +12,11 @@
 
 [**🌐 Go to the website!**](https://hndb.vercel.app/)
 
+## Presentation & demo video
+
+[![image](https://github.com/user-attachments/assets/f9eac5e3-ace7-4faf-acd0-584c539a8101)](https://www.youtube.com/watch?v=sGNYAl4aRYs)
+[hndb presentation & demo | YouTube](https://www.youtube.com/watch?v=sGNYAl4aRYs)
+
 ## Development
 
 Made with PostgreSQL, Next.js, Vercel, TailwindCSS, Prisma, and more!
