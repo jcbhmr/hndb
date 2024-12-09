@@ -3,7 +3,7 @@
 🗄️ Standalone Hacker News clone using an independant database
 
 <p align=center>
-  TODO: Add link & screenshot here
+  <img src="https://github.com/user-attachments/assets/2c19c91d-6a19-4100-9ee5-fa5dc05106cc">
 </p>
 
 ## Usage
@@ -12,4 +12,10 @@
 
 ## Development
 
-TODO
+Made with PostgreSQL, Next.js, Vercel, TailwindCSS, Prisma, and more!
+
+```sh
+npm run dev
+```
+
+Make sure you have the production DB env vars in `.env` or similar so that you can connect to the database.
