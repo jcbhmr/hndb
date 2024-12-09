@@ -11,5 +11,16 @@ export async function GET(request: NextRequest) {
     });
   }
  
-  // TODO
+  await prisma.submission.updateMany({
+    data: {
+      score: {
+        multiply: 0.5,
+      },
+    },
+    where: {
+      score: {
+        gt: 0,
+      },
+    },
+  });
 }
