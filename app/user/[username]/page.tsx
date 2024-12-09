@@ -48,6 +48,25 @@ export default async function User({ params }: { params: Promise<{ username: str
         },
     })).length;
 
+    const favoritesAll = await prisma.favorite.findMany({
+        where: {
+            userId: user.id
+        },
+        include: {
+            submission: {
+                include: {
+                    user: {
+                        select: {
+                            username: true
+                        }
+                    },
+                    upvotes: {},
+                    comments: {}
+                }
+            }
+        }
+    });
+
     return (
         <>
             <main className="container mx-auto py-8 px-4">
@@ -75,6 +94,19 @@ export default async function User({ params }: { params: Promise<{ username: str
                     author: x.user.username,
                     commentsCount: x.comments.length,
                     time: x.createdAt.toISOString(),
+                    rank: i + 1,
+                }))} />
+            </div>
+            <div>
+                <h2 className="text-2xl font-bold mb-4">Favorites</h2>
+                <SubmissionList submissions={favoritesAll.map((x, i) => ({
+                    id: x.submission.id,
+                    title: x.submission.title,
+                    url: x.submission.url,
+                    upvotes: x.submission.upvotes.length,
+                    author: x.submission.user.username,
+                    commentsCount: x.submission.comments.length,
+                    time: x.submission.createdAt.toISOString(),
                     rank: i + 1,
                 }))} />
             </div>

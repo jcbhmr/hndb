@@ -37,7 +37,7 @@ export async function Submission({
   return (
     <div className="flex items-start space-x-2 py-2">
       {rank && <span className="text-sm text-gray-500 w-4 text-right">{rank}.</span>}
-      { ableToUpvote && <button className="mt-1 text-gray-500 hover:text-[#ff6600]" onClick={async () => {
+      {ableToUpvote && <button className="mt-1 text-gray-500 hover:text-[#ff6600]" onClick={async () => {
         "use server"
         if (!session?.user?.email) {
           return
@@ -78,18 +78,18 @@ export async function Submission({
       </button>}
       <div className="flex flex-col space-y-1">
         {url ? (
-        <div className="flex items-center space-x-1">
-          <Link href={url} className="text-sm font-medium text-black hover:underline">
+          <div className="flex items-center space-x-1">
+            <Link href={url} className="text-sm font-medium text-black hover:underline">
+              {title}
+            </Link>
+            <span className="text-xs text-gray-500">
+              ({new URL(url).hostname})
+            </span>
+          </div>
+        ) : (
+          <Link href={`/item/${id}`} className="text-sm font-medium text-black hover:underline">
             {title}
           </Link>
-          <span className="text-xs text-gray-500">
-            ({new URL(url).hostname})
-          </span>
-        </div>
-        ) : (
-        <Link href={`/item/${id}`} className="text-sm font-medium text-black hover:underline">
-          {title}
-        </Link>
         )}
         <div className="flex items-center space-x-1 text-xs text-gray-500">
           <span>{upvotes} upvotes</span>
@@ -103,6 +103,46 @@ export async function Submission({
             <MessageSquare className="h-3 w-3 mr-1" />
             {commentsCount} comments
           </Link>
+          {session?.user?.email && <button className="text-xs text-gray-500 hover:text-[#ff6600]" onClick={async () => {
+            "use server"
+            await prisma.report.create({
+              data: {
+                submissionId: id,
+                reason: "flagged",
+                userId: (await prisma.user.findFirst({
+                  where: {
+                    email: session.user!.email!
+                  }
+                }))?.id!,
+              }
+            })
+          }}>report</button>}
+          {session?.user?.email && <button className="text-xs text-gray-500 hover:text-[#ff6600]" onClick={async () => {
+            "use server"
+            const user = await prisma.user.findFirst({
+              where: {
+                email: session.user!.email!
+              }
+            })
+            if (!user) {
+              throw new Error("User not found")
+            }
+            const existingFavorite = await prisma.favorite.findFirst({
+              where: {
+                submissionId: id,
+                userId: user.id
+              }
+            })
+            if (existingFavorite) {
+              return
+            }
+            await prisma.favorite.create({
+              data: {
+                submissionId: id,
+                userId: user.id
+              }
+            })
+          }}>favorite</button>}
         </div>
       </div>
     </div>
