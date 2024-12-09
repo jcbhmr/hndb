@@ -19,6 +19,7 @@ export function SubmissionFormComponent({ action }: { action?: string | ((formDa
           <Label htmlFor="title">Title</Label>
           <Input
             id="title"
+            name='title'
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             placeholder="Enter the title of your submission"
@@ -29,6 +30,7 @@ export function SubmissionFormComponent({ action }: { action?: string | ((formDa
           <Label htmlFor="url">URL</Label>
           <Input
             id="url"
+            name='url'
             type="url"
             value={url}
             onChange={(e) => setUrl(e.target.value)}
