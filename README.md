@@ -6,6 +6,8 @@
   <img src="https://github.com/user-attachments/assets/2c19c91d-6a19-4100-9ee5-fa5dc05106cc">
 </p>
 
+🏫 Made as final project for Database Management Systems at UW-Whitewater
+
 ## Usage
 
 [**🌐 Go to the website!**](https://hndb.vercel.app/)
