@@ -1,0 +1,8 @@
+{
+    "crons": [
+      {
+        "path": "/api/decay-submission-score",
+        "schedule": "0 5 * * *"
+      }
+    ]
+  }

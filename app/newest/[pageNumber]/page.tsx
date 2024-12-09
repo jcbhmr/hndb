@@ -2,11 +2,17 @@ import Image from "next/image";
 import prisma from "@/lib/db";
 import { SubmissionList } from "@/components/submission";
 
-export default async function Home() {
-  const top30 = await prisma.submission.findMany({
+export default async function Newset({ params }: { params: Promise<{ pageNumber: string }> }) {
+    const pageNumber = (await params).pageNumber;
+
+    // /1 is same as / view 0-30, /2 is view 30-60, etc
+    const skip = (parseInt(pageNumber) - 1) * 30;
+
+  const newest30 = await prisma.submission.findMany({
+    skip: skip,
     take: 30,
     orderBy: {
-      score: "desc"
+        createdAt: "desc"
     },
     include: {
       user: {
@@ -20,7 +26,7 @@ export default async function Home() {
   });
 
   return (
-    <SubmissionList submissions={top30.map((x, i) => ({
+    <SubmissionList submissions={newest30.map((x, i) => ({
       id: x.id,
       title: x.title,
       url: x.url,
@@ -28,7 +34,7 @@ export default async function Home() {
       author: x.user.username,
       commentsCount: x.comments.length,
       time: x.createdAt.toISOString(),
-      rank: i + 1,
+      rank: skip + i + 1,
     }))} />
   );
 }

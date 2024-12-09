@@ -1,46 +1,64 @@
-import prisma from '../lib/prisma'
+import { saltAndHashPassword } from "@/lib/password"
+import prisma from "@/lib/db"
+import * as CSV from "csv/sync"
+import assert from "node:assert"
+import { readFile } from 'node:fs/promises'
 
 async function main() {
-  const response = await Promise.all([
-    prisma.users.upsert({
-      where: { email: 'rauchg@vercel.com' },
-      update: {},
-      create: {
-        name: 'Guillermo Rauch',
-        email: 'rauchg@vercel.com',
-        image:
-          'https://images.ctfassets.net/e5382hct74si/2P1iOve0LZJRZWUzfXpi9r/9d4d27765764fb1ad7379d7cbe5f1043/ucxb4lHy_400x400.jpg',
-      },
-    }),
-    prisma.users.upsert({
-      where: { email: 'lee@vercel.com' },
-      update: {},
-      create: {
-        name: 'Lee Robinson',
-        email: 'lee@vercel.com',
-        image:
-          'https://images.ctfassets.net/e5382hct74si/4BtM41PDNrx4z1ml643tdc/7aa88bdde8b5b7809174ea5b764c80fa/adWRdqQ6_400x400.jpg',
-      },
-    }),
-    await prisma.users.upsert({
-      where: { email: 'stey@vercel.com' },
-      update: {},
-      create: {
-        name: 'Steven Tey',
-        email: 'stey@vercel.com',
-        image:
-          'https://images.ctfassets.net/e5382hct74si/4QEuVLNyZUg5X6X4cW4pVH/eb7cd219e21b29ae976277871cd5ca4b/profile.jpg',
-      },
-    }),
-  ])
-  console.log(response)
+    await prisma.user.upsert({
+        where: { username: "test1" },
+        update: {},
+        create: {
+            username: "test1",
+            email: "test1@example.com",
+            password: saltAndHashPassword("password"),
+        }
+    });
+
+    const hn_1_csv = await readFile(require.resolve("./hn_1.csv"), "utf-8")
+    const data = CSV.parse(hn_1_csv, { columns: true }) as { "Object ID": string, Title: string, "Post Type": string, Author: string, "Created At": string, URL: string, Points: string, "Number of Comments": string }[]
+    for (const x of data) {
+        const user = await prisma.user.upsert({
+            where: { username: x.Author },
+            update: {},
+            create: {
+                username: x.Author,
+                email: `${x.Author}@example.com`,
+                password: saltAndHashPassword("password"),
+                createdAt: new Date(x["Created At"].replace(" ", "T") + "Z"),
+            }
+        })
+        let submission = await prisma.submission.findFirst({
+            where: {
+                title: x.Title,
+                userId: user.id,
+            }
+        })
+        if (submission) {
+            continue
+        }
+        submission = await prisma.submission.create({
+            data: {
+                title: x.Title,
+                url: x.URL,
+                createdAt: new Date(x["Created At"].replace(" ", "T") + "Z"),
+                userId: user.id,
+            }
+        })
+        const numberOfComments = parseFloat(x["Number of Comments"])
+        assert(!Number.isNaN(numberOfComments))
+        assert(Number.isInteger(numberOfComments))
+        for (let i = 0; i < numberOfComments; i++) {
+            await prisma.comment.create({
+                data: {
+                    submissionId: submission.id,
+                    userId: user.id,
+                    content: `Comment ${i + 1}`,
+                    createdAt: new Date(x["Created At"].replace(" ", "T") + "Z"),
+                }
+            })
+        }
+    }
 }
+
 main()
-  .then(async () => {
-    await prisma.$disconnect()
-  })
-  .catch(async (e) => {
-    console.error(e)
-    await prisma.$disconnect()
-    process.exit(1)
-  })

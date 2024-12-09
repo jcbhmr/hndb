@@ -2,11 +2,11 @@ import Image from "next/image";
 import prisma from "@/lib/db";
 import { SubmissionList } from "@/components/submission";
 
-export default async function Home() {
-  const top30 = await prisma.submission.findMany({
+export default async function Newset() {
+  const newest30 = await prisma.submission.findMany({
     take: 30,
     orderBy: {
-      score: "desc"
+        createdAt: "desc"
     },
     include: {
       user: {
@@ -20,7 +20,7 @@ export default async function Home() {
   });
 
   return (
-    <SubmissionList submissions={top30.map((x, i) => ({
+    <SubmissionList submissions={newest30.map((x, i) => ({
       id: x.id,
       title: x.title,
       url: x.url,

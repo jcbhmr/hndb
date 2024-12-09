@@ -11,10 +11,86 @@ datasource db {
   directUrl = env("POSTGRES_URL_NON_POOLING") // uses a direct connection
 }
 
-model users {
-  id        Int      @id @default(autoincrement())
-  name      String
-  email     String   @unique
-  image     String
-  createdAt DateTime @default(now())
+model User {
+  id                 Int                @id @default(autoincrement())
+  username           String             @unique
+  email              String             @unique
+  password           String 
+  createdAt          DateTime           @default(now())
+  submissions        Submission[]
+  comments           Comment[]
+  favorites          Favorite[]
+  upvotedSubmissions SubmissionUpvote[]
+  upvotedComments    CommentUpvote[]
+  reports            Report[]
+}
+
+// The score field in the Submission model will be updated using a scheduled job in JavaScript
+// to decay over time. The score is calculated based on the number of upvotes and the age of the submission.
+model Submission {
+  id        Int                @id @default(autoincrement())
+  title     String
+  url       String?
+  content   String?
+  createdAt DateTime           @default(now())
+  updatedAt DateTime           @updatedAt
+  userId    Int
+  user      User               @relation(fields: [userId], references: [id])
+  comments  Comment[]
+  upvotes   SubmissionUpvote[]
+  score     Float              @default(0) // Multiplied by 0.5 every cron "0 5 * * *" by /api/decay-submission-score
+  Favorite  Favorite[]
+  Report    Report[]
+}
+
+model Comment {
+  id           Int             @id @default(autoincrement())
+  content      String
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+  userId       Int
+  user         User            @relation(fields: [userId], references: [id])
+  submissionId Int
+  submission   Submission      @relation(fields: [submissionId], references: [id])
+  parentId     Int?
+  parent       Comment?        @relation("CommentToComment", fields: [parentId], references: [id])
+  children     Comment[]       @relation("CommentToComment")
+  upvotes      CommentUpvote[]
+  Report       Report[]
+}
+
+model Favorite {
+  id           Int        @id @default(autoincrement())
+  userId       Int
+  user         User       @relation(fields: [userId], references: [id])
+  submissionId Int
+  submission   Submission @relation(fields: [submissionId], references: [id])
+}
+
+model SubmissionUpvote {
+  id           Int        @id @default(autoincrement())
+  userId       Int
+  user         User       @relation(fields: [userId], references: [id])
+  submissionId Int
+  submission   Submission @relation(fields: [submissionId], references: [id])
+}
+
+model CommentUpvote {
+  id        Int     @id @default(autoincrement())
+  userId    Int
+  user      User    @relation(fields: [userId], references: [id])
+  commentId Int
+  comment   Comment @relation(fields: [commentId], references: [id])
+}
+
+model Report {
+  id           Int         @id @default(autoincrement())
+  reason       String
+  createdAt    DateTime    @default(now())
+  userId       Int
+  user         User        @relation(fields: [userId], references: [id])
+  submissionId Int?
+  submission   Submission? @relation(fields: [submissionId], references: [id])
+  commentId    Int?
+  comment      Comment?    @relation(fields: [commentId], references: [id])
 }

@@ -2,8 +2,12 @@ import Image from "next/image";
 import prisma from "@/lib/db";
 import { SubmissionList } from "@/components/submission";
 
-export default async function Home() {
+export default async function Home({ params }: { params: Promise<{ pageNumber: string }> }) {
+    const pageNumber = (await params).pageNumber;
+    const skip = (parseInt(pageNumber) - 1) * 30;
+
   const top30 = await prisma.submission.findMany({
+    skip: skip,
     take: 30,
     orderBy: {
       score: "desc"
@@ -28,7 +32,7 @@ export default async function Home() {
       author: x.user.username,
       commentsCount: x.comments.length,
       time: x.createdAt.toISOString(),
-      rank: i + 1,
+      rank: skip + i + 1,
     }))} />
   );
 }
